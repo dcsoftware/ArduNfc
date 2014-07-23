@@ -7,10 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		6B204B57197FE27600B73080 /* LocalLibrary.h in Sources */ = {isa = PBXBuildFile; fileRef = 6B304B57197FE27600B73080 /* LocalLibrary.h */; };
+		6B204B57197FE27600B73080 /* MyCard.h in Sources */ = {isa = PBXBuildFile; fileRef = 6B304B57197FE27600B73080 /* MyCard.h */; };
 		6B204BA0197FE27600B73080 /* ArduNFC.ino in Sources */ = {isa = PBXBuildFile; fileRef = 6B304BA0197FE27600B73080 /* ArduNFC.ino */; };
 		6B304B54197FE27600B73080 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6B304B53197FE27600B73080 /* main.cpp */; };
-		6B304B56197FE27600B73080 /* LocalLibrary.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6B304B55197FE27600B73080 /* LocalLibrary.cpp */; };
+		6B304B56197FE27600B73080 /* MyCard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6B304B55197FE27600B73080 /* MyCard.cpp */; };
 		6B304BC1197FE4D600B73080 /* memulatetag.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6B304BB3197FE4D600B73080 /* memulatetag.cpp */; };
 		6B304BC2197FE4D600B73080 /* MNdef.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6B304BB5197FE4D600B73080 /* MNdef.cpp */; };
 		6B304BC3197FE4D600B73080 /* MNdefMessage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6B304BB7197FE4D600B73080 /* MNdefMessage.cpp */; };
@@ -257,8 +257,8 @@
 /* Begin PBXFileReference section */
 		6B304B50197FE27600B73080 /* Index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Index; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B304B53197FE27600B73080 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
-		6B304B55197FE27600B73080 /* LocalLibrary.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = LocalLibrary.cpp; sourceTree = "<group>"; };
-		6B304B57197FE27600B73080 /* LocalLibrary.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LocalLibrary.h; sourceTree = "<group>"; };
+		6B304B55197FE27600B73080 /* MyCard.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MyCard.cpp; sourceTree = "<group>"; };
+		6B304B57197FE27600B73080 /* MyCard.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MyCard.h; sourceTree = "<group>"; };
 		6B304B58197FE27600B73080 /* Makefile */ = {isa = PBXFileReference; explicitFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
 		6B304B5B197FE27600B73080 /* Sketchbook.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = Sketchbook.txt; path = Sketchbook/Sketchbook.txt; sourceTree = "<group>"; };
 		6B304B5D197FE27600B73080 /* Arduino Due.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = "Arduino Due.xcconfig"; path = "Configurations/Arduino Due.xcconfig"; sourceTree = "<group>"; };
@@ -604,8 +604,8 @@
 			isa = PBXGroup;
 			children = (
 				6B304B53197FE27600B73080 /* main.cpp */,
-				6B304B55197FE27600B73080 /* LocalLibrary.cpp */,
-				6B304B57197FE27600B73080 /* LocalLibrary.h */,
+				6B304B55197FE27600B73080 /* MyCard.cpp */,
+				6B304B57197FE27600B73080 /* MyCard.h */,
 				6B304B58197FE27600B73080 /* Makefile */,
 				6B304B96197FE27600B73080 /* ReadMe.txt */,
 				6B304BA0197FE27600B73080 /* ArduNFC.ino */,
@@ -1289,8 +1289,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				6B304B54197FE27600B73080 /* main.cpp in Sources */,
-				6B304B56197FE27600B73080 /* LocalLibrary.cpp in Sources */,
-				6B204B57197FE27600B73080 /* LocalLibrary.h in Sources */,
+				6B304B56197FE27600B73080 /* MyCard.cpp in Sources */,
+				6B204B57197FE27600B73080 /* MyCard.h in Sources */,
 				6B204BA0197FE27600B73080 /* ArduNFC.ino in Sources */,
 				AA2A140723143413AA000005 /* Arduino.h in Sources */,
 				AA2A140723143413AA000007 /* malloc.c in Sources */,
