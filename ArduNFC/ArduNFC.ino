@@ -41,11 +41,13 @@
 
 #include "SPI.h"
 #include "MPN532_SPI.h"
-#include "memulatetag.h"
+//#include "memulatetag.h"
+#include "MyCard.h"
 #include "MNdefMessage.h"
 
 PN532_SPI pn532spi(SPI, 10);
-EmulateTag nfc(pn532spi);
+//EmulateTag nfc(pn532spi);
+MyCard nfc(pn532spi);
 
 uint8_t ndefBuf[120];
 NdefMessage message;
