@@ -107,6 +107,11 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
         return false;
     }
     
+
+}
+
+uint8_t readData() {
+    
     uint8_t priv_capability_container[] = {
         0, 0x0F,
         0x20,
@@ -276,10 +281,6 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
     DMSG("\nIn Release 2");
     pn532.inRelease();
     return true;
-}
-
-uint8_t readData() {
-    
 }
 
 void MyCard::setResponse(responseCommand cmd, uint8_t* buf, uint8_t* sendlen, uint8_t sendlenOffset){
