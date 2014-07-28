@@ -55,8 +55,10 @@ int messageSize;
 
 uint8_t uid[3] = { 0x12, 0x34, 0x56 };
 
-String inputString = "";         // a string to hold incoming data
-boolean stringComplete = false;  // whether the string is complete
+String inputCommand = "";         // a string to hold incoming data
+String inputValue = "";
+boolean commandComplete = false;  // whether the string is complete
+boolean valueIn = false;
 
 
 //
@@ -123,11 +125,14 @@ void loop() {
     
     nfc.readData();
     
-    if (stringComplete) {
-        Serial.println(inputString);
+    if (commandComplete) {
+        parseCommand();
+        //Serial.println(inputString);
         // clear the string:
-        inputString = "";
-        stringComplete = false;
+        inputCommand = "";
+        inputValue = "";
+        valueIn = false;
+        commandComplete = false;
     }
 }
 
@@ -142,11 +147,27 @@ void serialEvent() {
         // get the new byte:
         char inChar = (char)Serial.read();
         // add it to the inputString:
-        inputString += inChar;
+        
+        
+        if(!valueIn) {
+            inputString += inChar;
+        } else {
+            inputValue += inChar;
+        }
         // if the incoming character is a newline, set a flag
         // so the main loop can do something about it:
+        if (inChar == ':') {
+            valueIn = true;
+        }
         if (inChar == '\n') {
             stringComplete = true;
         } 
     }
 }
+
+void parseCommand() {
+    if (inputCommand.equals("add")) {
+        <#statements#>
+    }
+}
+
