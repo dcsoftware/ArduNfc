@@ -55,6 +55,9 @@ int messageSize;
 
 uint8_t uid[3] = { 0x12, 0x34, 0x56 };
 
+String inputString = "";         // a string to hold incoming data
+boolean stringComplete = false;  // whether the string is complete
+
 
 //
 // Brief	Setup
@@ -62,11 +65,12 @@ uint8_t uid[3] = { 0x12, 0x34, 0x56 };
 //
 // Add setup code 
 void setup() {
-    Serial.begin(115200);
+    Serial.begin(230400);
     Serial.println("------- Emulate Tag --------");
     
     message = NdefMessage();
     message.addUriRecord("http://www.seeedstudio.com");
+    //message.addMimeMediaRecord(<#String mimeType#>, <#String payload#>);
     messageSize = message.getEncodedSize();
     if (messageSize > sizeof(ndefBuf)) {
         Serial.println("ndefBuf is too small");
@@ -85,6 +89,8 @@ void setup() {
     nfc.setUid(uid);
     
     nfc.init();
+    
+    nfc.emulate();
 }
 
 //
@@ -93,11 +99,6 @@ void setup() {
 //
 // Add loop code 
 void loop() {
-    // uncomment for overriding ndef in case a write to this tag occured
-    //nfc.setNdefFile(ndefBuf, messageSize);
-    
-    // start emulation (blocks)
-    nfc.emulate();
     
     // or start emulation with timeout
     /*if(!nfc.emulate(1000)){ // timeout 1 second
@@ -107,7 +108,7 @@ void loop() {
     // deny writing to the tag
     // nfc.setTagWriteable(false);
     
-    if(nfc.writeOccured()){
+    /*if(nfc.writeOccured()){
         Serial.println("\nWrite occured !");
         uint8_t* tag_buf;
         uint16_t length;
@@ -117,5 +118,35 @@ void loop() {
         msg.print();
     }
     
-    delay(1000);
+    delay(1000);*/
+    
+    
+    nfc.readData();
+    
+    if (stringComplete) {
+        Serial.println(inputString);
+        // clear the string:
+        inputString = "";
+        stringComplete = false;
+    }
+}
+
+/*
+ SerialEvent occurs whenever a new data comes in the
+ hardware serial RX.  This routine is run between each
+ time loop() runs, so using delay inside loop can delay
+ response.  Multiple bytes of data may be available.
+ */
+void serialEvent() {
+    while (Serial.available()) {
+        // get the new byte:
+        char inChar = (char)Serial.read();
+        // add it to the inputString:
+        inputString += inChar;
+        // if the incoming character is a newline, set a flag
+        // so the main loop can do something about it:
+        if (inChar == '\n') {
+            stringComplete = true;
+        } 
+    }
 }

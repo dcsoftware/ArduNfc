@@ -74,12 +74,6 @@ void MyCard::setUid(uint8_t* uid){
 
 bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
     
-    bool base_app = false;
-    bool priv_app = false;
-    
-    const uint8_t ndef_tag_application_name_v2[] = {0, 0x7, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01 };
-    const uint8_t ndef_tag_application_name_priv[] = {0, 0x7, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34};
-    
     uint8_t command[] = {
         PN532_COMMAND_TGINITASTARGET,
         5,                  // MODE: PICC only, Passive only
@@ -110,7 +104,13 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
 
 }
 
-uint8_t readData() {
+uint8_t MyCard::readData() {
+    
+    bool base_app = false;
+    bool priv_app = false;
+    
+    const uint8_t ndef_tag_application_name_v2[] = {0, 0x7, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01 };
+    const uint8_t ndef_tag_application_name_priv[] = {0, 0x7, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34};
     
     uint8_t priv_capability_container[] = {
         0, 0x0F,
@@ -156,7 +156,7 @@ uint8_t readData() {
         if(status < 0){
             DMSG("tgGetData failed!\n");
             pn532.inRelease();
-            return true;
+            return -1;
         }
         
         uint8_t p1 = rwbuf[C_APDU_P1];
