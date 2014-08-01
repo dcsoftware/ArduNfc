@@ -112,19 +112,6 @@ uint8_t MyCard::readData() {
     const uint8_t ndef_tag_application_name_v2[] = {0, 0x7, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01 };
     const uint8_t ndef_tag_application_name_priv[] = {0, 0x7, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34};
     
-    uint8_t priv_capability_container[] = {
-        0, 0x0F,
-        0x20,
-        0, 0x54,
-        0, 0xFF,
-        0x04,
-        0x06,
-        0x3F, 0x02,
-        ((NDEF_MAX_LENGTH & 0xFF00) >> 8), (NDEF_MAX_LENGTH & 0xFF),
-        0x00,
-        0x00
-    };
-    
     uint8_t base_capability_container[] = {
         0, 0x0F,    //CC length
         0x20,       //Mapping Version ---> version 2.0
@@ -154,8 +141,8 @@ uint8_t MyCard::readData() {
     while(runLoop){
         status = pn532.tgGetData(rwbuf, sizeof(rwbuf));
         if(status < 0){
-            DMSG("tgGetData failed!\n");
-            pn532.inRelease();
+            DMSG("tgGetData timed out\n");
+            //pn532.inRelease();
             return -1;
         }
         
@@ -177,13 +164,6 @@ uint8_t MyCard::readData() {
                                 currentFile = CC;
                             } else if(rwbuf[C_APDU_DATA+1] == 0x04){
                                 currentFile = NDEF;
-                            }
-                        } else if (lc == 2 && rwbuf[C_APDU_DATA] == 0x3F && (rwbuf[C_APDU_DATA+1] == 0x01 || rwbuf[C_APDU_DATA+1] == 0x02)){
-                            setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
-                            if(rwbuf[C_APDU_DATA+1] == 0x01){
-                                currentFile = CC_PRIV;
-                            } else if(rwbuf[C_APDU_DATA+1] == 0x02){
-                                currentFile = NDEF_PRIV;
                             }
                         } else {
                             setResponse(TAG_NOT_FOUND, rwbuf, &sendlen);
@@ -220,22 +200,6 @@ uint8_t MyCard::readData() {
                         }
                         break;
                     case NDEF:
-                        if( p1p2_length > NDEF_MAX_LENGTH){
-                            setResponse(END_OF_FILE_BEFORE_REACHED_LE_BYTES, rwbuf, &sendlen);
-                        }else {
-                            memcpy(rwbuf, ndef_file + p1p2_length, lc);
-                            setResponse(COMMAND_COMPLETE, rwbuf + lc, &sendlen, lc);
-                        }
-                        break;
-                    case CC_PRIV:
-                        if( p1p2_length > NDEF_MAX_LENGTH){
-                            setResponse(END_OF_FILE_BEFORE_REACHED_LE_BYTES, rwbuf, &sendlen);
-                        }else {
-                            memcpy(rwbuf,priv_capability_container + p1p2_length, lc);
-                            setResponse(COMMAND_COMPLETE, rwbuf + lc, &sendlen, lc);
-                        }
-                        break;
-                    case NDEF_PRIV:
                         if( p1p2_length > NDEF_MAX_LENGTH){
                             setResponse(END_OF_FILE_BEFORE_REACHED_LE_BYTES, rwbuf, &sendlen);
                         }else {

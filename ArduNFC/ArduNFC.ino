@@ -19,18 +19,6 @@
 // Core library for code-sense
 #if defined(WIRING) // Wiring specific
 #include "Wiring.h"
-#elif defined(MAPLE_IDE) // Maple specific
-#include "WProgram.h"   
-#elif defined(MICRODUINO) // Microduino specific
-#include "Arduino.h"
-#elif defined(MPIDE) // chipKIT specific
-#include "WProgram.h"
-#elif defined(DIGISPARK) // Digispark specific
-#include "Arduino.h"
-#elif defined(ENERGIA) // LaunchPad MSP430, Stellaris and Tiva, Experimeter Board FR5739 specific
-#include "Energia.h"
-#elif defined(TEENSYDUINO) // Teensy specific
-#include "Arduino.h"
 #elif defined(ARDUINO) // Arduino 1.0 and 1.5 specific
 #include "Arduino.h"
 #else // error
@@ -41,12 +29,10 @@
 
 #include "SPI.h"
 #include "MPN532_SPI.h"
-//#include "memulatetag.h"
 #include "MyCard.h"
 #include "MNdefMessage.h"
 
 PN532_SPI pn532spi(SPI, 10);
-//EmulateTag nfc(pn532spi);
 MyCard nfc(pn532spi);
 
 uint8_t ndefBuf[120];
@@ -61,6 +47,10 @@ boolean commandComplete = false;  // whether the string is complete
 boolean valueIn = false;
 
 
+void parseCommand() {
+    
+}
+
 //
 // Brief	Setup
 // Details	Define the pin the LED is connected to
@@ -71,8 +61,7 @@ void setup() {
     Serial.println("------- Emulate Tag --------");
     
     message = NdefMessage();
-    message.addUriRecord("http://www.seeedstudio.com");
-    //message.addMimeMediaRecord(<#String mimeType#>, <#String payload#>);
+    message.addMimeMediaRecord("application/nfcvending", "ciao");
     messageSize = message.getEncodedSize();
     if (messageSize > sizeof(ndefBuf)) {
         Serial.println("ndefBuf is too small");
@@ -99,7 +88,8 @@ void setup() {
 // Brief	Loop
 // Details	Blink the LED
 //
-// Add loop code 
+// Add loop code
+
 void loop() {
     
     // or start emulation with timeout
@@ -150,7 +140,7 @@ void serialEvent() {
         
         
         if(!valueIn) {
-            inputString += inChar;
+            inputCommand += inChar;
         } else {
             inputValue += inChar;
         }
@@ -160,14 +150,9 @@ void serialEvent() {
             valueIn = true;
         }
         if (inChar == '\n') {
-            stringComplete = true;
+            commandComplete = true;
         } 
     }
 }
 
-void parseCommand() {
-    if (inputCommand.equals("add")) {
-        <#statements#>
-    }
-}
 

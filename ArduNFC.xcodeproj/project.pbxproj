@@ -347,6 +347,11 @@
 		6B304BD0197FE4E600B73080 /* EEPROMVar.pde */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = EEPROMVar.pde; sourceTree = "<group>"; };
 		6B304BD1197FE4E600B73080 /* keywords.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = keywords.txt; sourceTree = "<group>"; };
 		6B304BD2197FE4E600B73080 /* README.markdown */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.markdown; sourceTree = "<group>"; };
+		6B963FC3198B93E900D1E16C /* GetCode.ino */ = {isa = PBXFileReference; lastKnownFileType = text; path = GetCode.ino; sourceTree = "<group>"; };
+		6B963FC4198B93E900D1E16C /* keywords.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = keywords.txt; sourceTree = "<group>"; };
+		6B963FC5198B93E900D1E16C /* README */ = {isa = PBXFileReference; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
+		6B963FC6198B93E900D1E16C /* TOTP.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TOTP.cpp; sourceTree = "<group>"; };
+		6B963FC7198B93E900D1E16C /* TOTP.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TOTP.h; sourceTree = "<group>"; };
 		AAAA140723143413AA000005 /* Arduino.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Arduino.h; sourceTree = "<group>"; };
 		AAAA140723143413AA000007 /* malloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = malloc.c; sourceTree = "<group>"; };
 		AAAA140723143413AA000008 /* realloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = realloc.c; sourceTree = "<group>"; };
@@ -622,6 +627,7 @@
 		6B304B5A197FE27600B73080 /* Sketchbook */ = {
 			isa = PBXGroup;
 			children = (
+				6B963FC0198B93E900D1E16C /* OTP */,
 				6B304BC7197FE4E600B73080 /* EEPROMEx */,
 				6B304BB2197FE4D600B73080 /* MPN532 */,
 				6B304B5B197FE27600B73080 /* Sketchbook.txt */,
@@ -779,6 +785,35 @@
 				6B304BD0197FE4E600B73080 /* EEPROMVar.pde */,
 			);
 			path = EEPROMVar;
+			sourceTree = "<group>";
+		};
+		6B963FC0198B93E900D1E16C /* OTP */ = {
+			isa = PBXGroup;
+			children = (
+				6B963FC1198B93E900D1E16C /* examples */,
+				6B963FC4198B93E900D1E16C /* keywords.txt */,
+				6B963FC5198B93E900D1E16C /* README */,
+				6B963FC6198B93E900D1E16C /* TOTP.cpp */,
+				6B963FC7198B93E900D1E16C /* TOTP.h */,
+			);
+			name = OTP;
+			path = ../../libraries/OTP;
+			sourceTree = "<group>";
+		};
+		6B963FC1198B93E900D1E16C /* examples */ = {
+			isa = PBXGroup;
+			children = (
+				6B963FC2198B93E900D1E16C /* GetCode */,
+			);
+			path = examples;
+			sourceTree = "<group>";
+		};
+		6B963FC2198B93E900D1E16C /* GetCode */ = {
+			isa = PBXGroup;
+			children = (
+				6B963FC3198B93E900D1E16C /* GetCode.ino */,
+			);
+			path = GetCode;
 			sourceTree = "<group>";
 		};
 		AAAA140723143413AA000000 /* Resources */ = {

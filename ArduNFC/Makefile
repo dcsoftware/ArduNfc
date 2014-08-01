@@ -31,7 +31,7 @@ APP_LIBS_LIST = SPI
 #
 
 #
-USER_LIBS_LIST = MPN532 EEPROMEx
+USER_LIBS_LIST = MPN532 EEPROMEx OTP
 
 # List core, application and user's libraries to be excluded
 # For example, WiFi may crash on Arduino 1.0.2, Esplora on Arduino 1.0.3, Firmata on Teensy 3.0,
