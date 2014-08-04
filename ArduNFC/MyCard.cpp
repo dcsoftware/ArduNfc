@@ -238,6 +238,7 @@ uint8_t MyCard::readData() {
                     
                     //Inserire codice per generare codice OTP
                     state = AUTHENTICATED;
+                    setResponse(VERIFIED, rwbuf, &sendlen);
                     
                 }
                 break;
@@ -262,6 +263,11 @@ uint8_t MyCard::readData() {
 
 void MyCard::setResponse(responseCommand cmd, uint8_t* buf, uint8_t* sendlen, uint8_t sendlenOffset){
     switch(cmd){
+        case VERIFIED:
+            buf[0] = R_APDU_SW1_COMMAND_COMPLETE;
+            buf[1] = R_APDU_SW2_COMMAND_COMPLETE;
+            *sendlen = 2 + sendlenOffset;
+            break;
         case PRIV_APPLICATION_SELECTED:
             buf[0] = R_PRIV_ADDRESS_BYTE1;
             buf[1] = R_PRIV_ADDRESS_BYTE2;
