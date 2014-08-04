@@ -111,7 +111,22 @@ void loop() {
     }
     
     delay(1000);*/
-    
+    switch (nfc.getCardState()) {
+        case WAITING:
+            break;
+        case CONNECTED:
+            break;
+        case AUTHENTICATED:
+            break;
+        case RECHARGED:
+            break;
+        case PURCHASED:
+            break;
+        case RELEASED:
+            break;
+        default:
+            break;
+    }
     
     nfc.readData();
     

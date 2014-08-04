@@ -255,6 +255,19 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		6B14F633198F8A0B00965F93 /* .gitignore */ = {isa = PBXFileReference; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
+		6B14F636198F8A0B00965F93 /* hmacsha256test.pde */ = {isa = PBXFileReference; lastKnownFileType = text; path = hmacsha256test.pde; sourceTree = "<group>"; };
+		6B14F637198F8A0B00965F93 /* Jamfile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.jam; path = Jamfile; sourceTree = "<group>"; };
+		6B14F638198F8A0B00965F93 /* runtests.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = runtests.sh; sourceTree = "<group>"; };
+		6B14F639198F8A0B00965F93 /* test.ex */ = {isa = PBXFileReference; lastKnownFileType = text; path = test.ex; sourceTree = "<group>"; };
+		6B14F63B198F8A0B00965F93 /* sha1test.pde */ = {isa = PBXFileReference; lastKnownFileType = text; path = sha1test.pde; sourceTree = "<group>"; };
+		6B14F63D198F8A0B00965F93 /* sha256test.pde */ = {isa = PBXFileReference; lastKnownFileType = text; path = sha256test.pde; sourceTree = "<group>"; };
+		6B14F63E198F8A0B00965F93 /* keywords.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = keywords.txt; sourceTree = "<group>"; };
+		6B14F63F198F8A0B00965F93 /* readme.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = readme.txt; sourceTree = "<group>"; };
+		6B14F640198F8A0B00965F93 /* sha1.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sha1.cpp; sourceTree = "<group>"; };
+		6B14F641198F8A0B00965F93 /* sha1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sha1.h; sourceTree = "<group>"; };
+		6B14F642198F8A0B00965F93 /* sha256.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sha256.cpp; sourceTree = "<group>"; };
+		6B14F643198F8A0B00965F93 /* sha256.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sha256.h; sourceTree = "<group>"; };
 		6B304B50197FE27600B73080 /* Index */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Index; sourceTree = BUILT_PRODUCTS_DIR; };
 		6B304B53197FE27600B73080 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		6B304B55197FE27600B73080 /* MyCard.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = MyCard.cpp; sourceTree = "<group>"; };
@@ -589,6 +602,59 @@
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		6B14F632198F8A0B00965F93 /* SHA2 */ = {
+			isa = PBXGroup;
+			children = (
+				6B14F633198F8A0B00965F93 /* .gitignore */,
+				6B14F634198F8A0B00965F93 /* examples */,
+				6B14F63E198F8A0B00965F93 /* keywords.txt */,
+				6B14F63F198F8A0B00965F93 /* readme.txt */,
+				6B14F640198F8A0B00965F93 /* sha1.cpp */,
+				6B14F641198F8A0B00965F93 /* sha1.h */,
+				6B14F642198F8A0B00965F93 /* sha256.cpp */,
+				6B14F643198F8A0B00965F93 /* sha256.h */,
+			);
+			name = SHA2;
+			path = ../../libraries/SHA2;
+			sourceTree = "<group>";
+		};
+		6B14F634198F8A0B00965F93 /* examples */ = {
+			isa = PBXGroup;
+			children = (
+				6B14F635198F8A0B00965F93 /* hmacsha256test */,
+				6B14F63A198F8A0B00965F93 /* sha1test */,
+				6B14F63C198F8A0B00965F93 /* sha256test */,
+			);
+			path = examples;
+			sourceTree = "<group>";
+		};
+		6B14F635198F8A0B00965F93 /* hmacsha256test */ = {
+			isa = PBXGroup;
+			children = (
+				6B14F636198F8A0B00965F93 /* hmacsha256test.pde */,
+				6B14F637198F8A0B00965F93 /* Jamfile */,
+				6B14F638198F8A0B00965F93 /* runtests.sh */,
+				6B14F639198F8A0B00965F93 /* test.ex */,
+			);
+			path = hmacsha256test;
+			sourceTree = "<group>";
+		};
+		6B14F63A198F8A0B00965F93 /* sha1test */ = {
+			isa = PBXGroup;
+			children = (
+				6B14F63B198F8A0B00965F93 /* sha1test.pde */,
+			);
+			path = sha1test;
+			sourceTree = "<group>";
+		};
+		6B14F63C198F8A0B00965F93 /* sha256test */ = {
+			isa = PBXGroup;
+			children = (
+				6B14F63D198F8A0B00965F93 /* sha256test.pde */,
+			);
+			path = sha256test;
+			sourceTree = "<group>";
+		};
 		6B304B45197FE27600B73080 = {
 			isa = PBXGroup;
 			children = (
@@ -627,6 +693,7 @@
 		6B304B5A197FE27600B73080 /* Sketchbook */ = {
 			isa = PBXGroup;
 			children = (
+				6B14F632198F8A0B00965F93 /* SHA2 */,
 				6B963FC0198B93E900D1E16C /* OTP */,
 				6B304BC7197FE4E600B73080 /* EEPROMEx */,
 				6B304BB2197FE4D600B73080 /* MPN532 */,

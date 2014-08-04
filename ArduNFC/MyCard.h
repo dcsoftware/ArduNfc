@@ -61,10 +61,15 @@ public:
         updateNdefCallback = func;
     };
     
+    cardState getCardState(){
+        return state;
+    }
+    
 private:
     PN532 pn532;
     uint8_t ndef_file[NDEF_MAX_LENGTH];
     uint8_t* uidPtr;
+    cardState state;
     bool tagWrittenByInitiator;
     bool tagWriteable;
     void (*updateNdefCallback)(uint8_t *ndef, uint16_t length);

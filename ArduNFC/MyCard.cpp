@@ -45,11 +45,14 @@
 #define R_PRIV_ADDRESS_BYTE2 0xAA
 
 // ISO7816-4 commands
-#define ISO7816_SELECT_FILE 0xA4
-#define ISO7816_READ_BINARY 0xB0
-#define ISO7816_UPDATE_BINARY 0xD6
+#define SELECT_FILE 0xA4
+#define READ_BINARY 0xB0
+#define UPDATE_BINARY 0xD6
+#define VERIFY 0x20
 
 typedef enum { NONE, CC, NDEF, CC_PRIV, NDEF_PRIV } tag_file;   // CC ... Compatibility Container
+
+String password;
 
 
 bool MyCard::init(){
@@ -73,6 +76,9 @@ void MyCard::setUid(uint8_t* uid){
 }
 
 bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
+    
+    state = WAITING;
+    password = "";
     
     uint8_t command[] = {
         PN532_COMMAND_TGINITASTARGET,
@@ -105,9 +111,6 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
 }
 
 uint8_t MyCard::readData() {
-    
-    bool base_app = false;
-    bool priv_app = false;
     
     const uint8_t ndef_tag_application_name_v2[] = {0, 0x7, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01 };
     const uint8_t ndef_tag_application_name_priv[] = {0, 0x7, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34};
@@ -152,7 +155,7 @@ uint8_t MyCard::readData() {
         uint16_t p1p2_length = ((int16_t) p1 << 8) + p2;
         
         switch(rwbuf[C_APDU_INS]){
-            case ISO7816_SELECT_FILE:
+            case SELECT_FILE:
                 switch(p1){
                     case C_APDU_P1_SELECT_BY_ID:
                         if(p2 != 0x0c){
@@ -171,13 +174,10 @@ uint8_t MyCard::readData() {
                         break;
                     case C_APDU_P1_SELECT_BY_NAME:
                         if(0 == memcmp(ndef_tag_application_name_v2, rwbuf + C_APDU_P2, sizeof(ndef_tag_application_name_v2))){
-                            base_app = true;
-                            priv_app = false;
+                            state = CONNECTED;
                             setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                         } else if (0 == memcmp(ndef_tag_application_name_priv, rwbuf + C_APDU_P2, sizeof(ndef_tag_application_name_priv))){
-                            priv_app = true;
-                            base_app = false;
-                            DMSG("\nOK\n");
+                            DMSG("\nOK");
                             setResponse(PRIV_APPLICATION_SELECTED, rwbuf, &sendlen);
                         } else {
                             DMSG("function not supported\n");
@@ -186,7 +186,7 @@ uint8_t MyCard::readData() {
                         break;
                 }
                 break;
-            case ISO7816_READ_BINARY:
+            case READ_BINARY:
                 switch(currentFile){
                     case NONE:
                         setResponse(TAG_NOT_FOUND, rwbuf, &sendlen);
@@ -209,7 +209,7 @@ uint8_t MyCard::readData() {
                         break;
                 }
                 break;
-            case ISO7816_UPDATE_BINARY:
+            case UPDATE_BINARY:
                 if(!tagWriteable){
                     setResponse(FUNCTION_NOT_SUPPORTED, rwbuf, &sendlen);
                 } else{
@@ -226,6 +226,19 @@ uint8_t MyCard::readData() {
                             updateNdefCallback(ndef_file + 2, ndef_length);
                         }
                     }
+                }
+                break;
+            case VERIFY:
+                if((p1 == 0x00) && (p2 == 0x00)) {
+                    DMSG("\nVerifying: ");
+                    for (int i = 0; i <= lc; i++) {
+                        DMSG_HEX(rwbuf[C_APDU_DATA + i]);
+                        DMSG_WRT(rwbuf[C_APDU_DATA + i]);
+                    }
+                    
+                    //Inserire codice per generare codice OTP
+                    state = AUTHENTICATED;
+                    
                 }
                 break;
             default:
