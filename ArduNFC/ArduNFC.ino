@@ -128,8 +128,6 @@ void loop() {
             break;
     }
     
-    nfc.readData();
-    
     if (commandComplete) {
         parseCommand();
         //Serial.println(inputString);
@@ -146,7 +144,7 @@ void loop() {
  hardware serial RX.  This routine is run between each
  time loop() runs, so using delay inside loop can delay
  response.  Multiple bytes of data may be available.
- */
+ 
 void serialEvent() {
     while (Serial.available()) {
         // get the new byte:
@@ -168,6 +166,6 @@ void serialEvent() {
             commandComplete = true;
         } 
     }
-}
+}*/
 
 

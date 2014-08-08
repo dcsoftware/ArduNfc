@@ -9,8 +9,8 @@
 #include "MyCard.h"
 #include "MPN532_debug.h"
 #include "MNdefMessage.h"
-
 #include <string.h>
+#include <Serial.h>
 
 #define MAX_TGREAD
 
@@ -43,14 +43,28 @@
 #define R_APDU_SW2_END_OF_FILE_BEFORE_REACHED_LE_BYTES 0x82
 #define R_PRIV_ADDRESS_BYTE1 0xAA
 #define R_PRIV_ADDRESS_BYTE2 0xAA
+#define R_SW1_STATUS_WAITING 0x22
+#define R_SW2_STATUS_WAITING 0x33
+#define R_SW1_STATUS_RECHARGED 0x33
+#define R_SW2_STATUS_RECHARGED 0x44
+#define R_SW1_STATUS_PURCHASE 0x44
+#define R_SW2_STATUS_PURCHASE 0x55
+#define R_SW1_STATUS_DATA_UPDATED 0x55
+#define R_SW2_STATUS_DATA_UPDATED 0x66
 
 // ISO7816-4 commands
 #define SELECT_FILE 0xA4
 #define READ_BINARY 0xB0
 #define UPDATE_BINARY 0xD6
-#define VERIFY 0x20
+#define AUTHENTICATE 0x20
+#define LOG_IN 0x30
+#define READING_STATUS 0x40
+#define UPDATE_CREDIT 0x50
 
-typedef enum { NONE, CC, NDEF, CC_PRIV, NDEF_PRIV } tag_file;   // CC ... Compatibility Container
+#define S_COM_RECHARGE 0x52
+#define S_COM_PURCHASE 0x50
+
+typedef enum { NONE, CC, NDEF} tag_file;   // CC ... Compatibility Container
 
 String password;
 
@@ -76,9 +90,15 @@ void MyCard::setUid(uint8_t* uid){
 }
 
 bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
-    
+
     state = WAITING;
     password = "";
+    int reading = 0;
+    
+    const uint8_t ndef_tag_application_name_v2[] = {0, 0x7, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01 };
+    const uint8_t ndef_tag_application_name_priv[] = {0, 0x7, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34};
+    const char *comTerminator = ":";
+    const char *valueTerminator = ".";
     
     uint8_t command[] = {
         PN532_COMMAND_TGINITASTARGET,
@@ -106,14 +126,6 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
         DMSG("tgInitAsTarget failed or timed out!");
         return false;
     }
-    
-
-}
-
-uint8_t MyCard::readData() {
-    
-    const uint8_t ndef_tag_application_name_v2[] = {0, 0x7, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01 };
-    const uint8_t ndef_tag_application_name_priv[] = {0, 0x7, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34};
     
     uint8_t base_capability_container[] = {
         0, 0x0F,    //CC length
@@ -146,7 +158,7 @@ uint8_t MyCard::readData() {
         if(status < 0){
             DMSG("tgGetData timed out\n");
             //pn532.inRelease();
-            return -1;
+            //return -1;
         }
         
         uint8_t p1 = rwbuf[C_APDU_P1];
@@ -178,7 +190,7 @@ uint8_t MyCard::readData() {
                             setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                         } else if (0 == memcmp(ndef_tag_application_name_priv, rwbuf + C_APDU_P2, sizeof(ndef_tag_application_name_priv))){
                             DMSG("\nOK");
-                            setResponse(PRIV_APPLICATION_SELECTED, rwbuf, &sendlen);
+                            setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                         } else {
                             DMSG("function not supported\n");
                             setResponse(FUNCTION_NOT_SUPPORTED, rwbuf, &sendlen);
@@ -228,17 +240,71 @@ uint8_t MyCard::readData() {
                     }
                 }
                 break;
-            case VERIFY:
+            case AUTHENTICATE:
                 if((p1 == 0x00) && (p2 == 0x00)) {
-                    DMSG("\nVerifying: ");
+                    Serial.println("Authenticating...");
+                    //DMSG("\nAuthenticating... ");
                     for (int i = 0; i <= lc; i++) {
-                        DMSG_HEX(rwbuf[C_APDU_DATA + i]);
+                        //DMSG_HEX(rwbuf[C_APDU_DATA + i]);
                         DMSG_WRT(rwbuf[C_APDU_DATA + i]);
                     }
                     
                     //Inserire codice per generare codice OTP
+                    
+                    
                     state = AUTHENTICATED;
-                    setResponse(VERIFIED, rwbuf, &sendlen);
+                    setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
+                    
+                }
+                break;
+            case LOG_IN:
+                if((p1 == 0x00) && (p2 == 0x00)) {
+                    Serial.println("Logging user: ");
+                    //DMSG("\nLoggin in... ");
+                    for (int i = 0; i <= lc; i++) {
+                        Serial.write(rwbuf[C_APDU_DATA + i]);
+                    }
+                    state = AUTHENTICATED;
+                    setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
+                    
+                }
+                break;
+            case READING_STATUS:
+                if((p1 == 0x00) && (p2 == 0x00)) {
+                    
+                    if (reading = 0 ) {
+                        DMSG("\nReading status");
+                        reading++;
+                    }
+                    
+                    DMSG(".");
+                    if(Serial.available() > 0) {
+                        String command = Serial.readStringUntil(*comTerminator);
+                        
+                        if (command.equals("R")) {
+                            Serial.println("Recharged!!!\n\n");
+                            setResponse(STATUS_RECHARGED, rwbuf, &sendlen);
+                        } else if (command.equals("P")) {
+                            Serial.println("Purchase!!!\n\n");
+                            setResponse(STATUS_PURCHASE, rwbuf, &sendlen);
+                        }
+                        
+                    } else {
+                    
+                    
+                    state = AUTHENTICATED;
+                    setResponse(STATUS_WAITING, rwbuf, &sendlen);
+                    }
+                    
+                }
+                break;
+            case UPDATE_CREDIT:
+                if((p1 == 0x00) && (p2 == 0x00)) {
+                    DMSG("\nVerifying: ");
+
+                    
+                    state = AUTHENTICATED;
+                    setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                     
                 }
                 break;
@@ -263,18 +329,6 @@ uint8_t MyCard::readData() {
 
 void MyCard::setResponse(responseCommand cmd, uint8_t* buf, uint8_t* sendlen, uint8_t sendlenOffset){
     switch(cmd){
-        case VERIFIED:
-            buf[0] = R_APDU_SW1_COMMAND_COMPLETE;
-            buf[1] = R_APDU_SW2_COMMAND_COMPLETE;
-            *sendlen = 2 + sendlenOffset;
-            break;
-        case PRIV_APPLICATION_SELECTED:
-            buf[0] = R_PRIV_ADDRESS_BYTE1;
-            buf[1] = R_PRIV_ADDRESS_BYTE2;
-            buf[2] = R_APDU_SW1_COMMAND_COMPLETE;
-            buf[3] = R_APDU_SW2_COMMAND_COMPLETE;
-            *sendlen = 4;
-            break;
         case COMMAND_COMPLETE:
             buf[0] = R_APDU_SW1_COMMAND_COMPLETE;
             buf[1] = R_APDU_SW2_COMMAND_COMPLETE;
@@ -298,6 +352,27 @@ void MyCard::setResponse(responseCommand cmd, uint8_t* buf, uint8_t* sendlen, ui
         case END_OF_FILE_BEFORE_REACHED_LE_BYTES:
             buf[0] = R_APDU_SW1_END_OF_FILE_BEFORE_REACHED_LE_BYTES;
             buf[1] = R_APDU_SW2_END_OF_FILE_BEFORE_REACHED_LE_BYTES;
+            *sendlen= 2;
+            break;
+        case STATUS_WAITING:
+            buf[0] = R_SW1_STATUS_WAITING;
+            buf[1] = R_SW2_STATUS_WAITING;
+            *sendlen= 2;
+            break;
+        case STATUS_RECHARGED:
+            buf[0] = R_SW1_STATUS_RECHARGED;
+            buf[1] = R_SW2_STATUS_RECHARGED;
+            buf[2] = 0x01;
+            *sendlen= 2;
+            break;
+        case STATUS_PURCHASE:
+            buf[0] = R_SW1_STATUS_PURCHASE;
+            buf[1] = R_SW2_STATUS_PURCHASE;
+            *sendlen= 2;
+            break;
+        case STATUS_DATA_UPDATED:
+            buf[0] = R_SW1_STATUS_DATA_UPDATED;
+            buf[1] = R_SW2_STATUS_DATA_UPDATED;
             *sendlen= 2;
             break;
     }

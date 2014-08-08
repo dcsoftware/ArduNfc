@@ -14,7 +14,7 @@
 #include "MPN532.h"
 
 #define NDEF_MAX_LENGTH 128  // altough ndef can handle up to 0xfffe in size, arduino cannot.
-typedef enum {COMMAND_COMPLETE, TAG_NOT_FOUND, FUNCTION_NOT_SUPPORTED, MEMORY_FAILURE, END_OF_FILE_BEFORE_REACHED_LE_BYTES, PRIV_APPLICATION_SELECTED, VERIFIED} responseCommand;
+typedef enum {COMMAND_COMPLETE, TAG_NOT_FOUND, FUNCTION_NOT_SUPPORTED, MEMORY_FAILURE, END_OF_FILE_BEFORE_REACHED_LE_BYTES, PRIV_APPLICATION_SELECTED, STATUS_WAITING, STATUS_RECHARGED, STATUS_PURCHASE, STATUS_DATA_UPDATED} responseCommand;
 
 typedef enum {WAITING, CONNECTED, AUTHENTICATED, RECHARGED, PURCHASED, RELEASED } cardState;
 
@@ -26,8 +26,6 @@ public:
     bool init();
     
     bool emulate(const uint16_t tgInitAsTargetTimeout = 0);
-    
-    uint8_t readData();
     
     /*
      * @param uid pointer to byte array of length 3 (uid is 4 bytes - first byte is fixed) or zero for uid
