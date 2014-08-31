@@ -68,7 +68,6 @@ typedef enum { NONE, CC, NDEF} tag_file;   // CC ... Compatibility Container
 
 String password;
 
-
 bool MyCard::init(){
     pn532.begin();
     return pn532.SAMConfig();
@@ -90,15 +89,13 @@ void MyCard::setUid(uint8_t* uid){
 }
 
 bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
-
+        
     state = WAITING;
     password = "";
     int reading = 0;
     
     const uint8_t ndef_tag_application_name_v2[] = {0, 0x7, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01 };
     const uint8_t ndef_tag_application_name_priv[] = {0, 0x7, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34};
-    const char *comTerminator = ":";
-    const char *valueTerminator = ".";
     
     uint8_t command[] = {
         PN532_COMMAND_TGINITASTARGET,
@@ -242,7 +239,6 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                 break;
             case AUTHENTICATE:
                 if((p1 == 0x00) && (p2 == 0x00)) {
-                    Serial.println("Authenticating...");
                     //DMSG("\nAuthenticating... ");
                     for (int i = 0; i <= lc; i++) {
                         //DMSG_HEX(rwbuf[C_APDU_DATA + i]);
@@ -259,11 +255,10 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                 break;
             case LOG_IN:
                 if((p1 == 0x00) && (p2 == 0x00)) {
-                    Serial.println("Logging user: ");
-                    //DMSG("\nLoggin in... ");
+                    /*DMSG("\nLoggin in... ");
                     for (int i = 0; i <= lc; i++) {
                         Serial.write(rwbuf[C_APDU_DATA + i]);
-                    }
+                    }*/
                     state = AUTHENTICATED;
                     setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                     
@@ -278,14 +273,12 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                     }
                     
                     DMSG(".");
-                    if(Serial.available() > 0) {
+                    /*if(Serial.available() > 0) {
                         String command = Serial.readStringUntil(*comTerminator);
                         
                         if (command.equals("R")) {
-                            Serial.println("Recharged!!!\n\n");
                             setResponse(STATUS_RECHARGED, rwbuf, &sendlen);
                         } else if (command.equals("P")) {
-                            Serial.println("Purchase!!!\n\n");
                             setResponse(STATUS_PURCHASE, rwbuf, &sendlen);
                         }
                         
@@ -294,7 +287,9 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                     
                     state = AUTHENTICATED;
                     setResponse(STATUS_WAITING, rwbuf, &sendlen);
-                    }
+                    }*/
+                    state = AUTHENTICATED;
+                    setResponse(STATUS_WAITING, rwbuf, &sendlen);
                     
                 }
                 break;
@@ -321,6 +316,8 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
             pn532.inRelease();
             return true;
         }
+
+        
     }
     DMSG("\nIn Release 2");
     pn532.inRelease();
