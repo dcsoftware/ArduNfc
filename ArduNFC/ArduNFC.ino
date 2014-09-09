@@ -31,7 +31,9 @@
 #include "MPN532_SPI.h"
 #include "MyCard.h"
 #include "MNdefMessage.h"
-#include <avr/wdt.h>
+//#include <avr/wdt.h>
+#include <EEPROMex.h>
+#include <avr/interrupt.h>
 #define SERIAL_COMMAND_CONNECTION "connection:"
 #define SERIAL_COMMAND_RECHARGE "recharge:"
 #define SERIAL_COMMAND_PURCHASE "purchase:"
@@ -43,9 +45,9 @@
 #define SERIAL_VALUE_REQUEST "req;"
 
 
-typedef enum {S_DISCONNECTED, S_CONNECTED} SerialState;
+//typedef enum {S_DISCONNECTED, S_CONNECTED} SerialState;
 
-SerialState serialState;
+//SerialState serialState;
 
 PN532_SPI pn532spi(SPI, 10);
 MyCard nfc(pn532spi);
@@ -53,20 +55,38 @@ MyCard nfc(pn532spi);
 uint8_t ndefBuf[120];
 NdefMessage message;
 int messageSize;
+int idAddress = 0;
+long id;
 
 uint8_t uid[3] = { 0x12, 0x34, 0x56 };
 volatile int n = 0;
-int led = 7;
+/*int led = 7;
 int led1 = 6;
 int led2 = 5;
+int intPin = 2;
+volatile int interruptCount = 0;
 
 String inputCommand = "";         // a string to hold incoming data
 String inputValue = "";
 boolean commandComplete = false;  // whether the string is complete
-boolean valueIn = false;
+boolean valueIn = false;*/
 
 
-ISR(WDT_vect) {
+/*void myIsr (){
+    noInterrupts();
+    interruptCount++;
+    nfc.updateInterruptCount(interruptCount);
+    interrupts();
+    digitalWrite(led, !digitalRead(led));
+}
+
+ISR(INT0_vect) {
+    interruptCount++;
+    nfc.updateInterruptCount(interruptCount);
+}*/
+
+/*ISR(WDT_vect) {
+    String response = "";
     static boolean state = false;
     if(Serial.available() > 0) {
         while(Serial.available() > 0) {
@@ -99,10 +119,14 @@ ISR(WDT_vect) {
         } else if (inputCommand.equals("set_data:")) {
             
         } else if (inputCommand.equals(SERIAL_COMMAND_PURCHASE) && (serialState == CONNECTED)) {
-            digitalWrite(led1, HIGH);
+            //digitalWrite(led1, HIGH);
+            Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
             
         } else if (inputCommand.equals(SERIAL_COMMAND_RECHARGE) && (serialState == CONNECTED)) {
             digitalWrite(led2, HIGH);
+            Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
+        } else if (inputCommand.equals(SERIAL_COMMAND_GET_TIME) && (serialState == CONNECTED)) {
+            nfc.updateTime(true, inputValue.toInt());
         }
         inputCommand = "";
         inputValue = "";
@@ -118,21 +142,36 @@ void watchdogTimerEnable(const byte interval) {
     WDTCSR =  0b01000000 | interval;    // set WDIE, and appropriate delay
     wdt_reset();
     interrupts();
+}*/
+
+void prova () {
+    
 }
 
 //
 // Brief	Setup
 // Details	Define the pin the LED is connected to
 //
-// Add setup code 
+// Add setup code
 void setup() {
+    if(EEPROM.isReady()) {
+        id = EEPROM.readLong(idAddress);
+    }
+    if(id == 0) {
+        if(EEPROM.isReady()) {
+            EEPROM.writeLong(idAddress, 00000001);
+        }
+    }
+    
+    /*pinMode(intPin, INPUT);
+    digitalWrite(intPin, HIGH); //enabling pull up resistor
     pinMode(led, OUTPUT);
     pinMode(led1, OUTPUT );
     pinMode(led2, OUTPUT);
     digitalWrite(led1, LOW);
     digitalWrite(led, LOW);
     digitalWrite(led2, LOW);
-    serialState = S_DISCONNECTED;
+    serialState = S_DISCONNECTED;*/
     Serial.begin(230400);
     //Serial.println("------- Emulate Tag --------");
     //Serial.println("connection:req;");
@@ -160,6 +199,11 @@ void setup() {
     
     nfc.init();
     
+    /*sei();                            //external interrupt routine
+    EIMSK |= (1 << INT0);
+    EICRA |= (1 << ISC01);
+    
+    //attachInterrupt(0, myIsr, RISING);*/
     
     // sleep bit patterns:
     //  16 ms: 0b000000
@@ -172,7 +216,7 @@ void setup() {
     //  2 s: 0b000111
     //  4 s: 0b100000
     //  8 s: 0b100001
-    watchdogTimerEnable(0b000101);
+    //watchdogTimerEnable(0b000101);
 }
 
 //
@@ -182,9 +226,6 @@ void setup() {
 // Add loop code
 
 void loop() {
-    
-    Serial.println("connection:req;");
-
     
     nfc.emulate();
 }
