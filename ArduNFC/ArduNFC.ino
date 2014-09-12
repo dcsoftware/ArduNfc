@@ -30,6 +30,7 @@
 #include "SPI.h"
 #include "MPN532_SPI.h"
 #include "MyCard.h"
+//#include "emulatetag.h"
 #include "MNdefMessage.h"
 //#include <avr/wdt.h>
 #include <EEPROMex.h>
@@ -51,6 +52,7 @@
 
 PN532_SPI pn532spi(SPI, 10);
 MyCard nfc(pn532spi);
+//EmulateTag nfc(pn532spi);
 
 uint8_t ndefBuf[120];
 NdefMessage message;
@@ -85,69 +87,6 @@ ISR(INT0_vect) {
     nfc.updateInterruptCount(interruptCount);
 }*/
 
-/*ISR(WDT_vect) {
-    String response = "";
-    static boolean state = false;
-    if(Serial.available() > 0) {
-        while(Serial.available() > 0) {
-            // get the new byte:
-            char inChar = (char)Serial.read();
-            // add it to the inputString:
-            
-            if(!valueIn) {
-                inputCommand += inChar;
-            } else {
-                inputValue += inChar;
-            }
-            // if the incoming character is a newline, set a flag
-            // so the main loop can do something about it:
-            if (inChar == ':') {
-                valueIn = true;
-            }
-            if (inChar == ';') {
-                commandComplete = true;
-            }
-        }
-        
-    }
-    if (commandComplete) {
-        if(inputCommand.equals(SERIAL_COMMAND_CONNECTION)) {
-            if(inputValue.equals(SERIAL_RESPONSE_OK)) {
-                serialState = S_CONNECTED;
-                digitalWrite(led, HIGH);
-            }
-        } else if (inputCommand.equals("set_data:")) {
-            
-        } else if (inputCommand.equals(SERIAL_COMMAND_PURCHASE) && (serialState == CONNECTED)) {
-            //digitalWrite(led1, HIGH);
-            Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
-            
-        } else if (inputCommand.equals(SERIAL_COMMAND_RECHARGE) && (serialState == CONNECTED)) {
-            digitalWrite(led2, HIGH);
-            Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
-        } else if (inputCommand.equals(SERIAL_COMMAND_GET_TIME) && (serialState == CONNECTED)) {
-            nfc.updateTime(true, inputValue.toInt());
-        }
-        inputCommand = "";
-        inputValue = "";
-        valueIn = false;
-        commandComplete = false;
-    }
-}
-
-void watchdogTimerEnable(const byte interval) {
-    noInterrupts();
-    MCUSR = 0;                          // reset various flags
-    WDTCSR |= 0b00011000;               // see docs, set WDCE, WDE
-    WDTCSR =  0b01000000 | interval;    // set WDIE, and appropriate delay
-    wdt_reset();
-    interrupts();
-}*/
-
-void prova () {
-    
-}
-
 //
 // Brief	Setup
 // Details	Define the pin the LED is connected to
@@ -165,12 +104,6 @@ void setup() {
     
     /*pinMode(intPin, INPUT);
     digitalWrite(intPin, HIGH); //enabling pull up resistor
-    pinMode(led, OUTPUT);
-    pinMode(led1, OUTPUT );
-    pinMode(led2, OUTPUT);
-    digitalWrite(led1, LOW);
-    digitalWrite(led, LOW);
-    digitalWrite(led2, LOW);
     serialState = S_DISCONNECTED;*/
     Serial.begin(230400);
     //Serial.println("------- Emulate Tag --------");

@@ -16,7 +16,7 @@
 #define NDEF_MAX_LENGTH 128  // altough ndef can handle up to 0xfffe in size, arduino cannot.
 typedef enum {COMMAND_COMPLETE, TAG_NOT_FOUND, FUNCTION_NOT_SUPPORTED, MEMORY_FAILURE, END_OF_FILE_BEFORE_REACHED_LE_BYTES, PRIV_APPLICATION_SELECTED, STATUS_WAITING, STATUS_RECHARGED, STATUS_PURCHASE, STATUS_DATA_UPDATED} responseCommand;
 
-typedef enum {WAITING, CONNECTED, AUTHENTICATED, WAITING_SERIAL, RECHARGED, PURCHASED, RELEASED } cardState;
+typedef enum {WAITING, CONNECTED, AUTHENTICATED, LOGGED, WAITING_SERIAL, RECHARGE, PURCHASE, DISCONNECTED } CardState;
 
 class MyCard{
     
@@ -26,6 +26,8 @@ public:
     bool init();
     
     bool emulate(const uint16_t tgInitAsTargetTimeout = 0);
+    
+    bool emulate2(const uint16_t tgInitAsTargetTimeout = 0);
     
     void updateInterruptCount(int count);
     void updateTime(bool updated, long time);
@@ -62,7 +64,7 @@ public:
         updateNdefCallback = func;
     };
     
-    cardState getCardState(){
+    CardState getCardState(){
         return state;
     }
     
@@ -70,7 +72,7 @@ private:
     PN532 pn532;
     uint8_t ndef_file[NDEF_MAX_LENGTH];
     uint8_t* uidPtr;
-    cardState state;
+    CardState state;
     bool tagWrittenByInitiator;
     bool tagWriteable;
     void (*updateNdefCallback)(uint8_t *ndef, uint16_t length);

@@ -75,12 +75,21 @@
 #define SERIAL_RESPONSE_OK "ok;"
 #define SERIAL_RESPONSE_ERROR "err;"
 #define SERIAL_VALUE_REQUEST "req;"
+#define SERIAL_COMMAND_START "<"
+#define SERIAL_COMMAND_END ">"
 
 typedef enum { NONE, CC, NDEF} tag_file;   // CC ... Compatibility Container
 
 typedef enum {S_DISCONNECTED, S_CONNECTED} SerialState;
 
+typedef enum {NFC_COMM, SERIAL_COMM} CommType;
+
+
 SerialState serialState;
+CardState cardState;
+CommType commType = NFC_COMM;
+
+int reading = 0;
 
 String password;
 String secretKey = "J7hdj302mNio93BCSd93";
@@ -96,6 +105,7 @@ String inputCommand = "";         // a string to hold incoming data
 String inputValue = "";
 boolean commandComplete = false;  // whether the string is complete
 boolean valueIn = false;
+char* otpReceived = "";
 
 TOTP totp = TOTP(secretK, 20);
 
@@ -103,9 +113,11 @@ TOTP totp = TOTP(secretK, 20);
 void updateTime(bool updated, long time) {
     epoch = time;
     timeRead = updated;
+    digitalWrite(led1, HIGH);
 }
 
 ISR(WDT_vect) {
+    commType = SERIAL_COMM;
     String response = "";
     static boolean state = false;
     if(Serial.available() > 0) {
@@ -126,6 +138,9 @@ ISR(WDT_vect) {
             }
             if (inChar == ';') {
                 commandComplete = true;
+                Serial.println(inputCommand);
+
+                
             }
         }
         
@@ -139,7 +154,7 @@ ISR(WDT_vect) {
         } else if (inputCommand.equals("set_data:")) {
             
         } else if (inputCommand.equals(SERIAL_COMMAND_PURCHASE) && (serialState == CONNECTED)) {
-            //digitalWrite(led1, HIGH);
+            digitalWrite(led1, HIGH);
             Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
             
         } else if (inputCommand.equals(SERIAL_COMMAND_RECHARGE) && (serialState == CONNECTED)) {
@@ -170,10 +185,10 @@ bool MyCard::init(){
     return pn532.SAMConfig();
 }
 
-void MyCard::updateInterruptCount(int count) {
-
-    intCount = count;
-}
+//void MyCard::updateInterruptCount(int count) {
+//
+//    intCount = count;
+//}
 
 
 
@@ -200,12 +215,10 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
     digitalWrite(led1, LOW);
     digitalWrite(led, LOW);
     digitalWrite(led2, LOW);
-    state = WAITING;
+    cardState = WAITING;
     password = "";
-    int reading = 0;
     
-    pinMode(led1, OUTPUT);
-    digitalWrite(led1, LOW);
+    watchdogTimerEnable(0b000100);
     
     const uint8_t ndef_tag_application_name_v2[] = {0, 0x7, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01 };
     const uint8_t ndef_tag_application_name_priv[] = {0, 0x7, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34};
@@ -227,7 +240,6 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
         0, // length of general bytes
         0  // length of historical bytes
     };
-    
     
     
     if(uidPtr != 0){  // if uid is set copy 3 bytes to nfcid1
@@ -258,6 +270,7 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
     
     tagWrittenByInitiator = false;
     
+    
     uint8_t rwbuf[128];
     uint8_t sendlen;
     int16_t status;
@@ -266,20 +279,7 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
     bool runLoop = true;
     
     while(runLoop){
-        DMSG("\nINTERRUPT COUNT: ");
-        DMSG_INT(intCount);
-        DMSG("\n");
-        
-        if(timeRead) {
-            char* newCode = totp.getCode(epoch);
-            if(strcmp(code, newCode) != 0) {
-                strcpy(code, newCode);
-                Serial.println(code);
-                digitalWrite(led1, HIGH);
-                timeRead = false;
-            }
-        
-        
+
         status = pn532.tgGetData(rwbuf, sizeof(rwbuf));
         if(status < 0){
             DMSG("tgGetData timed out\n");
@@ -291,6 +291,7 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
         uint8_t p2 = rwbuf[C_APDU_P2];
         uint8_t lc = rwbuf[C_APDU_LC];
         uint16_t p1p2_length = ((int16_t) p1 << 8) + p2;
+
         
         switch(rwbuf[C_APDU_INS]){
             case SELECT_FILE:
@@ -312,13 +313,14 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                         break;
                     case C_APDU_P1_SELECT_BY_NAME:
                         if(0 == memcmp(ndef_tag_application_name_v2, rwbuf + C_APDU_P2, sizeof(ndef_tag_application_name_v2))){
-                            state = CONNECTED;
+                            cardState = CONNECTED;
                             setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                         } else if (0 == memcmp(ndef_tag_application_name_priv, rwbuf + C_APDU_P2, sizeof(ndef_tag_application_name_priv))){
                             DMSG("\nOK");
                             //if(serialState == S_DISCONNECTED) {
-                            watchdogTimerEnable(0b000011);
+                            //watchdogTimerEnable(0b000011);
                             Serial.println("connection:req;");
+                            //digitalWrite(led, HIGH);
                             //}
                             setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                         } else {
@@ -375,37 +377,33 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                     //DMSG("\nAuthenticating... ");
                     for (int i = 0; i <= lc; i++) {
                         //DMSG_HEX(rwbuf[C_APDU_DATA + i]);
+                        otpReceived += rwbuf[C_APDU_DATA + i];
                         DMSG_WRT(rwbuf[C_APDU_DATA + i]);
                     }
-                    //Serial.println("get_time:req;");
-                    //Inserire codice per generare codice OTP
-                    /*while (!timeRead){
-                        delay(10);
-                    }
+
+                    Serial.println("get_time:req");
                     
-                    if(timeRead) {
-                        char* newCode = totp.getCode(epoch);
-                        if(strcmp(code, newCode) != 0) {
-                            strcpy(code, newCode);
-                            Serial.println(code);
-                                digitalWrite(led1, HIGH);
-                        }
-                        
-                    }*/
+//                    while (!timeRead) {
+//                        delay(10);
+//                    }
+//                    digitalWrite(led2, HIGH);
+//
+//                    
+//                    if (timeRead) {
+//                        char* newCode = totp.getCode(epoch);
+//                        if(strcmp(code, newCode) != 0) {
+//                            strcpy(code, newCode);
+//                        }
+//                        
+//                        if(strcmp(code, otpReceived) == 0) {
+//                            digitalWrite(led2, HIGH);
+//                        }
+//                    }
                     
-                    state = WAITING_SERIAL;
-                    //setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
+                    cardState = WAITING_SERIAL;
+                    setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                     
                 }
-                break;
-            case WAITING_SERIAL:
-                while (!timeRead){
-                 delay(10);
-                 }
-                 
-
-                 
-                 }
                 break;
             case LOG_IN:
                 if((p1 == 0x00) && (p2 == 0x00)) {
@@ -413,7 +411,7 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                     for (int i = 0; i <= lc; i++) {
                         Serial.write(rwbuf[C_APDU_DATA + i]);
                     }*/
-                    state = AUTHENTICATED;
+                    cardState = AUTHENTICATED;
                     setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                     
                 }
@@ -442,7 +440,7 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                     state = AUTHENTICATED;
                     setResponse(STATUS_WAITING, rwbuf, &sendlen);
                     }*/
-                    state = AUTHENTICATED;
+                    cardState = AUTHENTICATED;
                     setResponse(STATUS_WAITING, rwbuf, &sendlen);
                     
                 }
@@ -452,7 +450,7 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                     DMSG("\nVerifying: ");
 
                     
-                    state = AUTHENTICATED;
+                    cardState = AUTHENTICATED;
                     setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                     
                 }
@@ -477,6 +475,7 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
     pn532.inRelease();
     return true;
 }
+
 
 void MyCard::setResponse(responseCommand cmd, uint8_t* buf, uint8_t* sendlen, uint8_t sendlenOffset){
     switch(cmd){

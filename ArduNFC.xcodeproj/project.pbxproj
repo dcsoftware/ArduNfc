@@ -18,6 +18,8 @@
 		6B304BC5197FE4D600B73080 /* MPN532.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6B304BBB197FE4D600B73080 /* MPN532.cpp */; };
 		6B304BC6197FE4D600B73080 /* MPN532_SPI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6B304BBE197FE4D600B73080 /* MPN532_SPI.cpp */; };
 		6B304BD3197FE4E600B73080 /* EEPROMex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6B304BC9197FE4E600B73080 /* EEPROMex.cpp */; };
+		6BF84B1119C1E19200AD3E17 /* note.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6BF84B1019C1E19200AD3E17 /* note.cpp */; };
+		6BF84B1419C1E96300AD3E17 /* emulatetag.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6BF84B1219C1E96300AD3E17 /* emulatetag.cpp */; };
 		AA2A140723143413AA000005 /* Arduino.h in Sources */ = {isa = PBXBuildFile; fileRef = AAAA140723143413AA000005 /* Arduino.h */; };
 		AA2A140723143413AA000007 /* malloc.c in Sources */ = {isa = PBXBuildFile; fileRef = AAAA140723143413AA000007 /* malloc.c */; };
 		AA2A140723143413AA000008 /* realloc.c in Sources */ = {isa = PBXBuildFile; fileRef = AAAA140723143413AA000008 /* realloc.c */; };
@@ -365,6 +367,9 @@
 		6B963FC5198B93E900D1E16C /* README */ = {isa = PBXFileReference; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
 		6B963FC6198B93E900D1E16C /* TOTP.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TOTP.cpp; sourceTree = "<group>"; };
 		6B963FC7198B93E900D1E16C /* TOTP.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TOTP.h; sourceTree = "<group>"; };
+		6BF84B1019C1E19200AD3E17 /* note.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = note.cpp; sourceTree = "<group>"; };
+		6BF84B1219C1E96300AD3E17 /* emulatetag.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = emulatetag.cpp; sourceTree = "<group>"; };
+		6BF84B1319C1E96300AD3E17 /* emulatetag.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = emulatetag.h; sourceTree = "<group>"; };
 		AAAA140723143413AA000005 /* Arduino.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Arduino.h; sourceTree = "<group>"; };
 		AAAA140723143413AA000007 /* malloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = malloc.c; sourceTree = "<group>"; };
 		AAAA140723143413AA000008 /* realloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = realloc.c; sourceTree = "<group>"; };
@@ -676,6 +681,7 @@
 			children = (
 				6B304B53197FE27600B73080 /* main.cpp */,
 				6B304B55197FE27600B73080 /* MyCard.cpp */,
+				6BF84B1019C1E19200AD3E17 /* note.cpp */,
 				6B304B57197FE27600B73080 /* MyCard.h */,
 				6B304B58197FE27600B73080 /* Makefile */,
 				6B304B96197FE27600B73080 /* ReadMe.txt */,
@@ -795,6 +801,8 @@
 		6B304BB2197FE4D600B73080 /* MPN532 */ = {
 			isa = PBXGroup;
 			children = (
+				6BF84B1219C1E96300AD3E17 /* emulatetag.cpp */,
+				6BF84B1319C1E96300AD3E17 /* emulatetag.h */,
 				6B304BB3197FE4D600B73080 /* memulatetag.cpp */,
 				6B304BB4197FE4D600B73080 /* memulatetag.h */,
 				6B304BB5197FE4D600B73080 /* MNdef.cpp */,
@@ -1407,6 +1415,7 @@
 				AA2A140723143413AA00000F /* HardwareSerial.h in Sources */,
 				AA2A140723143413AA000010 /* HID.cpp in Sources */,
 				AA2A140723143413AA000011 /* IPAddress.cpp in Sources */,
+				6BF84B1119C1E19200AD3E17 /* note.cpp in Sources */,
 				6B304BD3197FE4E600B73080 /* EEPROMex.cpp in Sources */,
 				AA2A140723143413AA000012 /* IPAddress.h in Sources */,
 				AA2A140723143413AA000013 /* main.cpp in Sources */,
@@ -1600,6 +1609,7 @@
 				AA2A140723143413AA0000D5 /* RobotSdCard.cpp in Sources */,
 				AA2A140723143413AA0000D6 /* SdCard.cpp in Sources */,
 				AA2A140723143413AA0000D7 /* SdCard.h in Sources */,
+				6BF84B1419C1E96300AD3E17 /* emulatetag.cpp in Sources */,
 				AA2A140723143413AA0000D8 /* SdInfo.h in Sources */,
 				AA2A140723143413AA0000D9 /* Sensors.cpp in Sources */,
 				AA2A140723143413AA0000DA /* SPI.cpp in Sources */,
