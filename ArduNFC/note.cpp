@@ -16,6 +16,10 @@
 // See 			note.h and ReadMe.txt for references
 //
 
+//char buf[32];
+//a.toCharArray(buf, sizeof(buf));
+//epoch = atol(buf);
+
 
 //bool MyCard::emulate2(const uint16_t tgInitAsTargetTimeout) {
 //

@@ -14,6 +14,7 @@
 #include "sha1.h"
 #include "TOTP.h"
 #include <avr/wdt.h>
+#include <stdlib.h>
 #define MAX_TGREAD
 
 
@@ -72,6 +73,7 @@
 #define SERIAL_COMMAND_SET_DATA "set_data:"
 #define SERIAL_COMMAND_GET_TIME "get_time:"
 #define SERIAL_COMMAND_SET_TIME "set_time:"
+#define SERIAL_COMMAND_LOG "log:";
 #define SERIAL_RESPONSE_OK "ok;"
 #define SERIAL_RESPONSE_ERROR "err;"
 #define SERIAL_VALUE_REQUEST "req;"
@@ -92,8 +94,8 @@ CommType commType = NFC_COMM;
 int reading = 0;
 
 String password;
-String secretKey = "J7hdj302mNio93BCSd93";
-uint8_t secretK[] = "J7hdj302mNio93BCSd93";
+String secretKey = "ABCDEFGHIJKLMNOPQRST";
+uint8_t secretK[] = "ABCDEFGHIJ"; //{0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a};
 int intCount = 0;
 bool timeRead = false;
 long epoch = 0;
@@ -103,11 +105,14 @@ int led1 = 6;
 int led2 = 5;
 String inputCommand = "";         // a string to hold incoming data
 String inputValue = "";
+String otpIn;
 boolean commandComplete = false;  // whether the string is complete
 boolean valueIn = false;
+boolean serialInt = false;
 char* otpReceived = "";
+char otp[10];
 
-TOTP totp = TOTP(secretK, 20);
+TOTP totp = TOTP(secretK, 10);
 
 
 void updateTime(bool updated, long time) {
@@ -116,10 +121,9 @@ void updateTime(bool updated, long time) {
     digitalWrite(led1, HIGH);
 }
 
-ISR(WDT_vect) {
-    commType = SERIAL_COMM;
-    String response = "";
-    static boolean state = false;
+boolean readCommand() {
+    boolean response = false;
+    
     if(Serial.available() > 0) {
         while(Serial.available() > 0) {
             // get the new byte:
@@ -138,36 +142,98 @@ ISR(WDT_vect) {
             }
             if (inChar == ';') {
                 commandComplete = true;
-                Serial.println(inputCommand);
-
-                
+                break;
             }
         }
         
     }
     if (commandComplete) {
+        //Serial.println("log:" + inputCommand + "-" + inputValue);
         if(inputCommand.equals(SERIAL_COMMAND_CONNECTION)) {
             if(inputValue.equals(SERIAL_RESPONSE_OK)) {
                 serialState = S_CONNECTED;
                 digitalWrite(led, HIGH);
+                response = true;
             }
         } else if (inputCommand.equals("set_data:")) {
             
         } else if (inputCommand.equals(SERIAL_COMMAND_PURCHASE) && (serialState == CONNECTED)) {
-            digitalWrite(led1, HIGH);
+            //digitalWrite(led1, HIGH);
             Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
+            response = true;
             
         } else if (inputCommand.equals(SERIAL_COMMAND_RECHARGE) && (serialState == CONNECTED)) {
-            digitalWrite(led2, HIGH);
+            //digitalWrite(led2, HIGH);
             Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
-        } else if (inputCommand.equals(SERIAL_COMMAND_GET_TIME) && (serialState == CONNECTED)) {
-            updateTime(true, inputValue.toInt());
+            response = true;
+        } else if (inputCommand.equals(SERIAL_COMMAND_GET_TIME)) {
+            digitalWrite(led2, HIGH);
+            int i = inputValue.length();
+            
+            String a = inputValue.substring(0, i - 5);
+            char buf[20];
+            a.concat('0');
+            a.toCharArray(buf, sizeof(buf));
+            buf[sizeof(buf) - 1] = 0;
+            epoch = atol(buf);
+            
+            /*Serial.print("log: epoch = ");
+            Serial.print(epoch);
+            Serial.print(" - timestep: ");
+            Serial.print(timestep);
+            Serial.println(" ;");*/
+            
+            
+            char* newCode = totp.getCode(epoch);
+            if(strcmp(code, newCode) != 0) {
+                strcpy(code, newCode);
+            }
+            
+            int f = strcmp(code, otp);
+            String c = code;
+            String b = otp;
+            Serial.print("log: generated otp = " + c);
+            Serial.print(" received otp = " + b);
+            Serial.print(" - compare = ");
+            Serial.print(f);
+            Serial.println(" ;");
+            
+            delay(200);
+            
+            
+            
+            if(strcmp(code, otp) == 0) {
+                Serial.println("log: AUTHENTICATION OK;");
+                digitalWrite(led2, HIGH);
+            }
+            response = true;
         }
         inputCommand = "";
         inputValue = "";
         valueIn = false;
         commandComplete = false;
+        return response;
     }
+}
+
+void waitingSerial() {
+    while (!serialInt) {
+        //digitalWrite(led2, !digitalRead(led2));
+        delay(100);
+    }
+    
+    readCommand();
+}
+
+ISR(WDT_vect) {
+    serialInt = false;
+    commType = SERIAL_COMM;
+    static boolean state = false;
+    if(Serial.available() > 0) {
+        serialInt = true;
+        //digitalWrite(led1, HIGH);
+    }
+
 }
 
 void watchdogTimerEnable(const byte interval) {
@@ -184,13 +250,6 @@ bool MyCard::init(){
     pn532.begin();
     return pn532.SAMConfig();
 }
-
-//void MyCard::updateInterruptCount(int count) {
-//
-//    intCount = count;
-//}
-
-
 
 void MyCard::setNdefFile(const uint8_t* ndef, const int16_t ndefLength){
     if(ndefLength >  (NDEF_MAX_LENGTH -2)){
@@ -317,12 +376,11 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                             setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                         } else if (0 == memcmp(ndef_tag_application_name_priv, rwbuf + C_APDU_P2, sizeof(ndef_tag_application_name_priv))){
                             DMSG("\nOK");
-                            //if(serialState == S_DISCONNECTED) {
-                            //watchdogTimerEnable(0b000011);
                             Serial.println("connection:req;");
-                            //digitalWrite(led, HIGH);
-                            //}
+                            //delay(500);
+                            waitingSerial();
                             setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
+                            
                         } else {
                             DMSG("function not supported\n");
                             setResponse(FUNCTION_NOT_SUPPORTED, rwbuf, &sendlen);
@@ -377,28 +435,19 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                     //DMSG("\nAuthenticating... ");
                     for (int i = 0; i <= lc; i++) {
                         //DMSG_HEX(rwbuf[C_APDU_DATA + i]);
-                        otpReceived += rwbuf[C_APDU_DATA + i];
-                        DMSG_WRT(rwbuf[C_APDU_DATA + i]);
+                        otp[i] += rwbuf[C_APDU_DATA + i];
+                        //DMSG_WRT(rwbuf[C_APDU_DATA + i]);
                     }
-
-                    Serial.println("get_time:req");
                     
-//                    while (!timeRead) {
-//                        delay(10);
-//                    }
-//                    digitalWrite(led2, HIGH);
-//
-//                    
-//                    if (timeRead) {
-//                        char* newCode = totp.getCode(epoch);
-//                        if(strcmp(code, newCode) != 0) {
-//                            strcpy(code, newCode);
-//                        }
-//                        
-//                        if(strcmp(code, otpReceived) == 0) {
-//                            digitalWrite(led2, HIGH);
-//                        }
-//                    }
+                    otpIn = otp;
+                    Serial.println("log: OTP received = " + otpIn + " ;");
+                    delay(200);
+
+
+                    Serial.println("get_time:req;");
+                    delay(200);
+
+                    waitingSerial();
                     
                     cardState = WAITING_SERIAL;
                     setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
