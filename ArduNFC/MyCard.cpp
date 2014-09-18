@@ -189,14 +189,14 @@ boolean readCommand() {
                 strcpy(code, newCode);
             }
             
-            int f = strcmp(code, otp);
+            /*int f = strcmp(code, otp);
             String c = code;
             String b = otp;
             Serial.print("log: generated otp = " + c);
             Serial.print(" received otp = " + b);
             Serial.print(" - compare = ");
             Serial.print(f);
-            Serial.println(" ;");
+            Serial.println(" ;");*/
             
             delay(200);
             
@@ -439,13 +439,13 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                         //DMSG_WRT(rwbuf[C_APDU_DATA + i]);
                     }
                     
-                    otpIn = otp;
+                    /*otpIn = otp;
                     Serial.println("log: OTP received = " + otpIn + " ;");
-                    delay(200);
+                    delay(200);*/
 
 
                     Serial.println("get_time:req;");
-                    delay(200);
+                    delay(50);  //se lo tolgo si impalla...
 
                     waitingSerial();
                     
