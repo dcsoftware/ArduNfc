@@ -94,10 +94,12 @@ SerialState serialState;
 CardState cardState;
 CommType commType = NFC_COMM;
 
-int reading = 0;
 
-String password;
-String secretKey = "ABCDEFGHIJKLMNOPQRST";
+String amountPurchased = "0.0";
+String amountRecharged = "0.0";
+String userId = "";
+String userCredit = "";
+int reading = 0;
 uint8_t secretK[] = "ABCDEFGHIJ"; //{0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a};
 int intCount = 0;
 bool timeRead = false;
@@ -118,17 +120,20 @@ char otp[10];
 TOTP totp = TOTP(secretK, 10);
 
 void verifyOtpCode(String input) {
+    noInterrupts();
     char* newCode;
+    char* newCode1;
+    char* newCode2;
     char code[6];
     char prevCode[6];
     char nextCode[6];
     
     String a = input.substring(0, input.length() - 5);
-    char buf[20];
+    char buff[20];
     a.concat('0');
-    a.toCharArray(buf, sizeof(buf));
-    buf[sizeof(buf) - 1] = 0;
-    epoch = atol(buf);
+    a.toCharArray(buff, sizeof(buff));
+    buff[sizeof(buff) - 1] = 0;
+    epoch = atol(buff);
     /*Serial.print("log: epoch = ");
      Serial.print(epoch);
      Serial.print(" - timestep: ");
@@ -138,40 +143,50 @@ void verifyOtpCode(String input) {
     
     newCode = totp.getCode(epoch);
     strcpy(code, newCode);
-    newCode = totp.getCode(epoch - 10);
-    strcpy(prevCode, newCode);
-    newCode = totp.getCode(epoch + 10);
-    strcpy(nextCode, newCode);
+    newCode1 = totp.getCode(epoch - 10);
+    strcpy(prevCode, newCode1);
+    newCode2 = totp.getCode(epoch + 10);
+    strcpy(nextCode, newCode2);
 
     
-    /*int f = strcmp(code, otp);
+     //int f = strcmp(code, otp);
+    delay(50);
      String c = code;
+    String c1 = prevCode;
+    String c2 = nextCode;
      String b = otp;
-     Serial.print("log: generated otp = " + c);
-     Serial.print(" received otp = " + b);
-     Serial.print(" - compare = ");
-     Serial.print(f);
-     Serial.println(" ;");*/
+     Serial.print("log: generated otp = ");
+    Serial.print(code);
     
-    delay(100);
+     //Serial.print(" received otp = " + b);
+     Serial.println(" ;");
+    Serial.flush();
+    delay(50);
     
     
     
     if(strcmp(prevCode, otp) == 0) {
         cardState = AUTHENTICATED;
+        delay(50);
         Serial.println("log: AUTHENTICATION OK;");
-        digitalWrite(led2, HIGH);
+        //digitalWrite(led2, HIGH);
     } else if(strcmp(code, otp) == 0) {
         cardState = AUTHENTICATED;
+        delay(50);
         Serial.println("log: AUTHENTICATION OK;");
-        digitalWrite(led2, HIGH);
+        //digitalWrite(led2, HIGH);
     } else if(strcmp(nextCode, otp) == 0) {
         cardState = AUTHENTICATED;
+        delay(50);
         Serial.println("log: AUTHENTICATION OK;");
-        digitalWrite(led2, HIGH);
+        //digitalWrite(led2, HIGH);
     } else {
         cardState = ERROR_AUTH;
+        delay(50);
+        Serial.println("log: AUTHENTICATION ERROR;");
+
     }
+    interrupts();
 }
 
 void readCommand() {
@@ -206,14 +221,17 @@ void readCommand() {
                 digitalWrite(led, HIGH);
             }
         } else if (inputCommand.equals("set_data:")) {
+            cardState = LOGGED;
             
         } else if (inputCommand.equals(SERIAL_COMMAND_PURCHASE) && (serialState == S_CONNECTED)) {
             //digitalWrite(led1, HIGH);
-            Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
+            amountPurchased = inputValue.substring(0, inputValue.length() - 1);
             cardState = PURCHASE;
+            Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
             
         } else if (inputCommand.equals(SERIAL_COMMAND_RECHARGE) && (serialState == S_CONNECTED)) {
             //digitalWrite(led2, HIGH);
+            amountRecharged = inputValue.substring(0, inputValue.length() - 1);
             cardState = RECHARGE;
             Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
         } else if (inputCommand.equals(SERIAL_COMMAND_GET_TIME) && (serialState == S_CONNECTED)) {
@@ -286,10 +304,9 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
     digitalWrite(led1, LOW);
     digitalWrite(led, LOW);
     digitalWrite(led2, LOW);
-    cardState = WAITING;
-    password = "";
+    cardState = DISCONNECTED;
     
-    watchdogTimerEnable(0b000100);
+    watchdogTimerEnable(0b000101);
     
     const uint8_t ndef_tag_application_name_v2[] = {0, 0x7, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01 };
     const uint8_t ndef_tag_application_name_priv[] = {0, 0x7, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34};
@@ -384,10 +401,10 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                         break;
                     case C_APDU_P1_SELECT_BY_NAME:
                         if(0 == memcmp(ndef_tag_application_name_v2, rwbuf + C_APDU_P2, sizeof(ndef_tag_application_name_v2))){
-                            cardState = CONNECTED;
                             setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                         } else if (0 == memcmp(ndef_tag_application_name_priv, rwbuf + C_APDU_P2, sizeof(ndef_tag_application_name_priv))){
                             DMSG("\nOK");
+                            cardState = CONNECTED;
                             Serial.println("connection:req;");
                             //delay(500);
                             waitingSerial();
@@ -447,7 +464,7 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                     //DMSG("\nAuthenticating... ");
                     for (int i = 0; i <= lc; i++) {
                         //DMSG_HEX(rwbuf[C_APDU_DATA + i]);
-                        otp[i] += rwbuf[C_APDU_DATA + i];
+                        otp[i] = rwbuf[C_APDU_DATA + i];
                         //DMSG_WRT(rwbuf[C_APDU_DATA + i]);
                     }
                     
@@ -475,11 +492,31 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                 break;
             case LOG_IN:
                 if((p1 == 0x00) && (p2 == 0x00)) {
-                    /*DMSG("\nLoggin in... ");
+                    DMSG("\nLoggin in... ");
+                    boolean next = false;
                     for (int i = 0; i <= lc; i++) {
-                        Serial.write(rwbuf[C_APDU_DATA + i]);
-                    }*/
-                    cardState = AUTHENTICATED;
+                        char c = (char)rwbuf[C_APDU_DATA + i];
+                        if (c == ';') {
+                            break;
+                        }
+                        if(c == ',') {
+                            next = true;
+                        } else {
+                            switch (next) {
+                                case false:
+                                    userId.concat(c);
+                                    break;
+                                case true:
+                                    userCredit.concat(c);
+                                    break;
+                            }
+                        }
+                        //Serial.write(rwbuf[C_APDU_DATA + i]);
+                    }
+                    
+                    Serial.println("set_data:" + userCredit + ";");
+                    delay(100);
+                    waitingSerial();
                     setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                     
                 }
@@ -487,30 +524,24 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
             case READING_STATUS:
                 if((p1 == 0x00) && (p2 == 0x00)) {
                     
-                    if (reading = 0 ) {
-                        DMSG("\nReading status");
-                        reading++;
-                    }
-                    
-                    DMSG(".");
-                    /*if(Serial.available() > 0) {
-                        String command = Serial.readStringUntil(*comTerminator);
-                        
-                        if (command.equals("R")) {
+                    switch (cardState) {
+                        case WAITING:
+                            cardState = WAITING;
+                            setResponse(STATUS_WAITING, rwbuf, &sendlen);
+                            break;
+                        case RECHARGE:
+                            
+                            cardState = WAITING;
                             setResponse(STATUS_RECHARGED, rwbuf, &sendlen);
-                        } else if (command.equals("P")) {
+                            break;
+                        case PURCHASE:
+                            cardState = WAITING;
                             setResponse(STATUS_PURCHASE, rwbuf, &sendlen);
-                        }
-                        
-                    } else {
-                    
-                    
-                    state = AUTHENTICATED;
-                    setResponse(STATUS_WAITING, rwbuf, &sendlen);
-                    }*/
-                    cardState = AUTHENTICATED;
-                    setResponse(STATUS_WAITING, rwbuf, &sendlen);
-                    
+
+                        default:
+                            break;
+                    }
+
                 }
                 break;
             case UPDATE_CREDIT:
@@ -578,15 +609,24 @@ void MyCard::setResponse(responseCommand cmd, uint8_t* buf, uint8_t* sendlen, ui
             *sendlen= 2;
             break;
         case STATUS_RECHARGED:
+            char amountR[amountRecharged.length()];
+            amountRecharged.toCharArray(amountR, sizeof(amountR));
             buf[0] = R_SW1_STATUS_RECHARGED;
             buf[1] = R_SW2_STATUS_RECHARGED;
-            buf[2] = 0x01;
-            *sendlen= 2;
+            for (int i = 0; i < sizeof(amountR); i++) {
+                buf[i + 2] = amountR[i];
+            }
+            *sendlen= 2 + sizeof(amountR);
             break;
         case STATUS_PURCHASE:
+            char amountP[amountPurchased.length()];
+            amountPurchased.toCharArray(amountP, sizeof(amountP));
             buf[0] = R_SW1_STATUS_PURCHASE;
             buf[1] = R_SW2_STATUS_PURCHASE;
-            *sendlen= 2;
+            for (int i = 0; i < sizeof(amountP); i++) {
+                buf[i + 2] = amountP[i];
+            }
+            *sendlen= 2 + sizeof(amountP);
             break;
         case STATUS_DATA_UPDATED:
             buf[0] = R_SW1_STATUS_DATA_UPDATED;
