@@ -145,7 +145,7 @@ void verifyOtpCode(String input) {
     strcpy(nextCode, newCode);
 
     
-    int f = strcmp(code, otp);
+    /*int f = strcmp(code, otp);
     Serial.print("log: generated otp = ");
     Serial.print(prevCode);
     Serial.print(" ");
@@ -157,7 +157,7 @@ void verifyOtpCode(String input) {
     Serial.print(otp);
     Serial.print(" - compare = ");
     Serial.print(f);
-    Serial.println(" ;");
+    Serial.println(" ;");*/
     
     delay(100);
     
@@ -166,15 +166,12 @@ void verifyOtpCode(String input) {
     if(strcmp(prevCode, otp) == 0) {
         cardState = AUTHENTICATED;
         Serial.println("log: AUTHENTICATION OK con prevCode;");
-        digitalWrite(led2, HIGH);
     } else if(strcmp(code, otp) == 0) {
         cardState = AUTHENTICATED;
         Serial.println("log: AUTHENTICATION OK con code;");
-        digitalWrite(led2, HIGH);
     } else if(strcmp(nextCode, otp) == 0) {
         cardState = AUTHENTICATED;
         Serial.println("log: AUTHENTICATION OK con nextCode;");
-        digitalWrite(led2, HIGH);
     } else {
         cardState = ERROR_AUTH;
         Serial.println("log: AUTHENTICATION ERROR;");
@@ -182,7 +179,8 @@ void verifyOtpCode(String input) {
     }
 }
 
-void readCommand() {
+boolean readCommand() {
+    boolean serialRead = false;
     if(Serial.available() > 0) {
         while(Serial.available() > 0) {
             // get the new byte:
@@ -217,15 +215,15 @@ void readCommand() {
             if(inputValue.equals(SERIAL_RESPONSE_OK)) {
                 
             }
-        } else if (inputCommand.equals(SERIAL_COMMAND_PURCHASE) && (serialState == S_CONNECTED)) {
+        } else if (inputCommand.equals(SERIAL_COMMAND_PURCHASE)) {
             //digitalWrite(led1, HIGH);
             Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
             cardState = PURCHASE;
             
-        } else if (inputCommand.equals(SERIAL_COMMAND_RECHARGE) && (serialState == S_CONNECTED)) {
-            //digitalWrite(led2, HIGH);
-            cardState = RECHARGE;
+        } else if (inputCommand.equals(SERIAL_COMMAND_RECHARGE)) {
+            //digitalWrite(led1, HIGH);
             Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
+            cardState = RECHARGE;
         } else if (inputCommand.equals(SERIAL_COMMAND_GET_TIME) && (serialState == S_CONNECTED)) {
             
             verifyOtpCode(inputValue);
@@ -235,7 +233,9 @@ void readCommand() {
         inputValue = "";
         valueIn = false;
         commandComplete = false;
+        serialRead = true;
     }
+    return serialRead;
 }
 
 void waitingSerial() {
@@ -298,7 +298,7 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
     digitalWrite(led2, LOW);
     userCredit = "0.0";
     userId = "";
-    watchdogTimerEnable(0b000100);
+    //watchdogTimerEnable(0b000100);
     
     const uint8_t ndef_tag_application_name_v2[] = {0, 0x7, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01 };
     const uint8_t ndef_tag_application_name_priv[] = {0, 0x7, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34};
@@ -399,7 +399,10 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                             DMSG("\nOK");
                             Serial.println("connection:req;");
                             //delay(500);
-                            waitingSerial();
+                            //waitingSerial();
+                            while (!readCommand()) {
+                                delay(10);
+                            }
                             setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                             
                         } else {
@@ -468,7 +471,10 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                     Serial.println("get_time:req;");
                     delay(50);  //se lo tolgo si impalla...
 
-                    waitingSerial();
+                    //waitingSerial();
+                    while (!readCommand()) {
+                        delay(10);
+                    }
                     
                     switch (cardState) {
                         case AUTHENTICATED:
@@ -497,9 +503,12 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                     userCredit = s.substring(x + 1, s.length() - 1);
                     
                     Serial.println("set_data:" + userCredit + ';');
-                    
-                    waitingSerial();
-                    
+                    delay(100);
+                    //waitingSerial();
+                    while (!readCommand()) {
+                        delay(10);
+                    }
+                    cardState = WAITING;
                     setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                     
                 }
@@ -507,12 +516,34 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
             case READING_STATUS:
                 if((p1 == 0x00) && (p2 == 0x00)) {
                     
-                    if (reading = 0 ) {
+                    readCommand();
+                    
+                    //waitingSerial();
+                    switch (cardState) {
+                        case WAITING:
+                            cardState = WAITING;
+                            Serial.println("log: status WAITING;");
+                            setResponse(STATUS_WAITING, rwbuf, &sendlen);
+                            break;
+                        case RECHARGE:
+                            digitalWrite(led2, HIGH);
+                            cardState = WAITING;
+                            Serial.println("log: status RECHARGED;");
+                            setResponse(STATUS_RECHARGED, rwbuf, &sendlen);
+                            break;
+                        case PURCHASE:
+                            cardState = WAITING;
+                            Serial.println("log: status PURCHASE;");
+                            setResponse(STATUS_PURCHASE, rwbuf, &sendlen);
+                            break;
+                    }
+                    delay(100);
+                    /*if (reading = 0 ) {
                         DMSG("\nReading status");
                         reading++;
                     }
                     
-                    DMSG(".");
+                    DMSG(".");*/
                     /*if(Serial.available() > 0) {
                         String command = Serial.readStringUntil(*comTerminator);
                         
@@ -528,8 +559,6 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                     state = AUTHENTICATED;
                     setResponse(STATUS_WAITING, rwbuf, &sendlen);
                     }*/
-                    cardState = AUTHENTICATED;
-                    setResponse(STATUS_WAITING, rwbuf, &sendlen);
                     
                 }
                 break;
@@ -600,7 +629,6 @@ void MyCard::setResponse(responseCommand cmd, uint8_t* buf, uint8_t* sendlen, ui
         case STATUS_RECHARGED:
             buf[0] = R_SW1_STATUS_RECHARGED;
             buf[1] = R_SW2_STATUS_RECHARGED;
-            buf[2] = 0x01;
             *sendlen= 2;
             break;
         case STATUS_PURCHASE:
