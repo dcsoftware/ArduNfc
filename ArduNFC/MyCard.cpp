@@ -96,8 +96,9 @@ CommType commType = NFC_COMM;
 
 int reading = 0;
 
-String password;
-String secretKey = "ABCDEFGHIJKLMNOPQRST";
+
+String userId;
+String userCredit;
 uint8_t secretK[] = "ABCDEFGHIJ"; //{0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a};
 int intCount = 0;
 bool timeRead = false;
@@ -213,7 +214,9 @@ void readCommand() {
                 digitalWrite(led, HIGH);
             }
         } else if (inputCommand.equals("set_data:")) {
-            
+            if(inputValue.equals(SERIAL_RESPONSE_OK)) {
+                
+            }
         } else if (inputCommand.equals(SERIAL_COMMAND_PURCHASE) && (serialState == S_CONNECTED)) {
             //digitalWrite(led1, HIGH);
             Serial.println(inputCommand.concat(SERIAL_RESPONSE_OK));
@@ -293,9 +296,8 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
     digitalWrite(led1, LOW);
     digitalWrite(led, LOW);
     digitalWrite(led2, LOW);
-    cardState = WAITING;
-    password = "";
-    
+    userCredit = "0.0";
+    userId = "";
     watchdogTimerEnable(0b000100);
     
     const uint8_t ndef_tag_application_name_v2[] = {0, 0x7, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01 };
@@ -482,11 +484,22 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                 break;
             case LOG_IN:
                 if((p1 == 0x00) && (p2 == 0x00)) {
-                    /*DMSG("\nLoggin in... ");
+                    DMSG("\nLoggin in... ");
+                    char string[50];
                     for (int i = 0; i <= lc; i++) {
-                        Serial.write(rwbuf[C_APDU_DATA + i]);
-                    }*/
-                    cardState = AUTHENTICATED;
+                        string[i] = (char)rwbuf[C_APDU_DATA + i];
+                        //Serial.write(rwbuf[C_APDU_DATA + i]);
+                    }
+                    string[lc] = '\0';
+                    String s = string;
+                    int x = s.indexOf(',');
+                    userId = s.substring(0, x -1);
+                    userCredit = s.substring(x + 1, s.length() - 1);
+                    
+                    Serial.println("set_data:" + userCredit + ';');
+                    
+                    waitingSerial();
+                    
                     setResponse(COMMAND_COMPLETE, rwbuf, &sendlen);
                     
                 }
