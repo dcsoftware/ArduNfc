@@ -119,9 +119,9 @@ TOTP totp = TOTP(secretK, 10);
 
 void verifyOtpCode(String input) {
     char* newCode;
-    char code[6];
-    char prevCode[6];
-    char nextCode[6];
+    char code[10];
+    char prevCode[10];
+    char nextCode[10];
     
     String a = input.substring(0, input.length() - 5);
     char buf[20];
@@ -144,14 +144,19 @@ void verifyOtpCode(String input) {
     strcpy(nextCode, newCode);
 
     
-    /*int f = strcmp(code, otp);
-     String c = code;
-     String b = otp;
-     Serial.print("log: generated otp = " + c);
-     Serial.print(" received otp = " + b);
-     Serial.print(" - compare = ");
-     Serial.print(f);
-     Serial.println(" ;");*/
+    int f = strcmp(code, otp);
+    Serial.print("log: generated otp = ");
+    Serial.print(prevCode);
+    Serial.print(" ");
+    Serial.print(code);
+    Serial.print(" ");
+    Serial.print(nextCode);
+    Serial.print(" ");
+    Serial.print(" received otp = ");
+    Serial.print(otp);
+    Serial.print(" - compare = ");
+    Serial.print(f);
+    Serial.println(" ;");
     
     delay(100);
     
@@ -159,18 +164,20 @@ void verifyOtpCode(String input) {
     
     if(strcmp(prevCode, otp) == 0) {
         cardState = AUTHENTICATED;
-        Serial.println("log: AUTHENTICATION OK;");
+        Serial.println("log: AUTHENTICATION OK con prevCode;");
         digitalWrite(led2, HIGH);
     } else if(strcmp(code, otp) == 0) {
         cardState = AUTHENTICATED;
-        Serial.println("log: AUTHENTICATION OK;");
+        Serial.println("log: AUTHENTICATION OK con code;");
         digitalWrite(led2, HIGH);
     } else if(strcmp(nextCode, otp) == 0) {
         cardState = AUTHENTICATED;
-        Serial.println("log: AUTHENTICATION OK;");
+        Serial.println("log: AUTHENTICATION OK con nextCode;");
         digitalWrite(led2, HIGH);
     } else {
         cardState = ERROR_AUTH;
+        Serial.println("log: AUTHENTICATION ERROR;");
+
     }
 }
 
@@ -447,7 +454,7 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                     //DMSG("\nAuthenticating... ");
                     for (int i = 0; i <= lc; i++) {
                         //DMSG_HEX(rwbuf[C_APDU_DATA + i]);
-                        otp[i] += rwbuf[C_APDU_DATA + i];
+                        otp[i] = rwbuf[C_APDU_DATA + i];
                         //DMSG_WRT(rwbuf[C_APDU_DATA + i]);
                     }
                     
