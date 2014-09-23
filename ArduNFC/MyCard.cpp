@@ -125,11 +125,11 @@ void verifyOtpCode(String input) {
     char nextCode[10];
     
     String a = input.substring(0, input.length() - 5);
-    char buf[20];
+    char buff[20];
     a.concat('0');
-    a.toCharArray(buf, sizeof(buf));
-    buf[sizeof(buf) - 1] = 0;
-    epoch = atol(buf);
+    a.toCharArray(buff, sizeof(buff));
+    buff[sizeof(buff) - 1] = 0;
+    epoch = atol(buff);
     /*Serial.print("log: epoch = ");
      Serial.print(epoch);
      Serial.print(" - timestep: ");
