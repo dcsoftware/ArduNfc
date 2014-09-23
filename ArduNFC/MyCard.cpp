@@ -159,7 +159,7 @@ void verifyOtpCode(String input) {
     Serial.print(f);
     Serial.println(" ;");*/
     
-    delay(100);
+    delay(50);
     
     
     
@@ -238,35 +238,6 @@ boolean readCommand() {
     return serialRead;
 }
 
-void waitingSerial() {
-    while (!serialInt) {
-        //digitalWrite(led2, !digitalRead(led2));
-        delay(100);
-    }
-    
-    readCommand();
-}
-
-ISR(WDT_vect) {
-    serialInt = false;
-    commType = SERIAL_COMM;
-    static boolean state = false;
-    if(Serial.available() > 0) {
-        serialInt = true;
-        //digitalWrite(led1, HIGH);
-    }
-
-}
-
-void watchdogTimerEnable(const byte interval) {
-    noInterrupts();
-    MCUSR = 0;                          // reset various flags
-    WDTCSR |= 0b00011000;               // see docs, set WDCE, WDE
-    WDTCSR =  0b01000000 | interval;    // set WDIE, and appropriate delay
-    wdt_reset();
-    interrupts();
-}
-
 
 bool MyCard::init(){
     pn532.begin();
@@ -298,7 +269,6 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
     digitalWrite(led2, LOW);
     userCredit = "0.0";
     userId = "";
-    //watchdogTimerEnable(0b000100);
     
     const uint8_t ndef_tag_application_name_v2[] = {0, 0x7, 0xD2, 0x76, 0x00, 0x00, 0x85, 0x01, 0x01 };
     const uint8_t ndef_tag_application_name_priv[] = {0, 0x7, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x12, 0x34};
@@ -398,8 +368,6 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                         } else if (0 == memcmp(ndef_tag_application_name_priv, rwbuf + C_APDU_P2, sizeof(ndef_tag_application_name_priv))){
                             DMSG("\nOK");
                             Serial.println("connection:req;");
-                            //delay(500);
-                            //waitingSerial();
                             while (!readCommand()) {
                                 delay(10);
                             }
@@ -462,16 +430,8 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                         otp[i] = rwbuf[C_APDU_DATA + i];
                         //DMSG_WRT(rwbuf[C_APDU_DATA + i]);
                     }
-                    
-                    /*otpIn = otp;
-                    Serial.println("log: OTP received = " + otpIn + " ;");
-                    delay(200);*/
-
 
                     Serial.println("get_time:req;");
-                    delay(50);  //se lo tolgo si impalla...
-
-                    //waitingSerial();
                     while (!readCommand()) {
                         delay(10);
                     }
@@ -503,8 +463,6 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                     userCredit = s.substring(x + 1, s.length() - 1);
                     
                     Serial.println("set_data:" + userCredit + ';');
-                    delay(100);
-                    //waitingSerial();
                     while (!readCommand()) {
                         delay(10);
                     }
@@ -537,28 +495,7 @@ bool MyCard::emulate(const uint16_t tgInitAsTargetTimeout){
                             setResponse(STATUS_PURCHASE, rwbuf, &sendlen);
                             break;
                     }
-                    delay(100);
-                    /*if (reading = 0 ) {
-                        DMSG("\nReading status");
-                        reading++;
-                    }
-                    
-                    DMSG(".");*/
-                    /*if(Serial.available() > 0) {
-                        String command = Serial.readStringUntil(*comTerminator);
-                        
-                        if (command.equals("R")) {
-                            setResponse(STATUS_RECHARGED, rwbuf, &sendlen);
-                        } else if (command.equals("P")) {
-                            setResponse(STATUS_PURCHASE, rwbuf, &sendlen);
-                        }
-                        
-                    } else {
-                    
-                    
-                    state = AUTHENTICATED;
-                    setResponse(STATUS_WAITING, rwbuf, &sendlen);
-                    }*/
+                    delay(50);
                     
                 }
                 break;
